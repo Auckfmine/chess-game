@@ -26,4 +26,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0.5px;
+}
+
+.square:hover{
+    background-color: #7b61ffc0;
+}
+
+.active {
+    background-color: #7B61FF !important;
+}
+
+.recommended{
+ background-color: #7b61ffc0;
 }
