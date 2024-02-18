@@ -9,6 +9,10 @@
 - **Board Design**: The visual representation of the chessboard, including the layout and styling.
 - **Piece Movements**: Detailed implementation of all chess piece movements according to the rules of chess.
 
+![Game Board Image](./board.png)
+
+
+
 ### TODO
 - **Player Profiles**: Allow users to create profiles and track their progress.
 - **Game Lobby**: Implement a lobby system for players to join games or create new ones.
