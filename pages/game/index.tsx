@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import styles from './game.module.css'
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 enum PieceName {
   PAWN = 'PAWN',
@@ -85,7 +85,7 @@ const INITIAL_POSITIONS: Record<string, string> = {
 }
 
 export default function Game() {
-  
+
   const setUpInitialPieces = (squares: Square[][]): Square[][] => {
     return squares.map(row =>
       row.map(square => {
@@ -97,7 +97,6 @@ export default function Game() {
   };
 
   const board = useMemo(() => {
-    console.log("recalculating the board");
     
     const board: Square[][] = [...Array(8)].map((_, i) =>
       [...Array(8)].map((_, j) => ({
@@ -111,17 +110,20 @@ export default function Game() {
 
   const [updatedBoard,setUpdatedBoard] = useState(board)
   const [availableMoves,setAvailableMoves] = useState<Square[]>([])
+  const [selectedSquare,setSelectedSquare] = useState<Square|undefined>()
+  
 
-
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>,clickedSquare:Square) => {
-    console.log("clicked square : ",clickedSquare);
-    
+  const handleClick = (event: React.MouseEvent<HTMLElement>,clickedSquare:Square) => {    
     event.preventDefault();
-    const foundSquare = board.flat().find(square => square.column === clickedSquare.column && square.row === clickedSquare.row);
-    if (foundSquare){
-      toggleSquareActive(foundSquare)
-      getPossibleMovesForPiece(foundSquare)
+    event.stopPropagation();
+    const foundSquare = updatedBoard.flat().find(square => square.column === clickedSquare.column && square.row === clickedSquare.row);
+    
+    if (foundSquare && !foundSquare.active && foundSquare.piece) {
+      setSelectedSquare(foundSquare);
+      toggleSquareActive(foundSquare);
+      getPossibleMovesForPiece(foundSquare);
+    } else if (foundSquare && foundSquare.active) {
+      toggleSquareActive(foundSquare);
     }
   }
 
@@ -166,7 +168,7 @@ export default function Game() {
   };
 
   const isSquareOccupied = (square: Square, board: Square[][]): boolean => {
-    return board.flat().some(s => s.column === square.column && s.row === square.row && s.piece);
+    return updatedBoard.flat().some(s => s.column === square.column && s.row === square.row && s.piece);
   };
 
   const isPawnFirstTimeMoving = (square:Square) => {
@@ -188,16 +190,50 @@ export default function Game() {
     return !!availableMoves.find(move => move.row === square.row && move.column === square.column )
   }
 
- const toggleSquareActive = (foundSquare:Square) => {
-    const updatedBoard = board.map(row =>
-      row.map(square =>
-        square.column === foundSquare.column && square.row === foundSquare.row
-          ? { ...square, active: !square.active } // Update the active field
-          : square
-      ));
-      setUpdatedBoard(updatedBoard)
-  }
+  const movePieceToAvailableSquare = (event: React.MouseEvent<HTMLElement>, clickedSquare: Square) => {
+    event.preventDefault();
+    const oldSquare = updatedBoard.flat().find(square => square.column === selectedSquare?.column && square.row === selectedSquare.row);
+    
+      const pieceToMove = oldSquare?.piece;
+      const boardUpdate = updatedBoard.map(row =>
+        row.map(square => {
+          if (square.column === oldSquare?.column && square.row === oldSquare.row ) {
+            // Remove the piece from the old square by returning a new object without the piece property
+            return { ...square, piece: undefined,active:false };
+          }
+          if (square.column === clickedSquare.column && square.row === clickedSquare.row) {
+            // Move the piece to the new square by returning a new object with the piece property
+            return { ...square, piece: pieceToMove };
+          }
+          // Return the square as is if it's not the old or new square
+          return square;
+        })
+      );
+      setUpdatedBoard(boardUpdate as unknown as Square[][]);
+      setAvailableMoves([])
+    
+  };
 
+  const toggleSquareActive = (foundSquare: Square) => {
+    const boardUpdate = updatedBoard.map(row =>
+      row.map(square => {
+        // If we found our square and it was active, make it inactive
+        if (square.column === foundSquare.column && square.row === foundSquare.row) {
+          // If the square is already active, clear the available moves
+          if (square.active) {
+            console.log("removing the availableMoves");
+            
+            setAvailableMoves([]);
+          }
+          return { ...square, active: !square.active };
+        } else {
+          // Set all others active state to false
+          return { ...square, active: false };
+        }
+      })
+    );
+    setUpdatedBoard(boardUpdate);
+  };
   return (
     <main className={styles.container}>
       <div className={styles.grid}>
@@ -206,6 +242,7 @@ export default function Game() {
             const key = `${square.column}${square.row}`; // Unique key for each square
             return (
               <div
+              onClick={(e)=>movePieceToAvailableSquare(e,square)}
                 style={{ textAlign: 'center' }}
                 className={`${styles.square} ${getStyle(outerId + innerId)} ${isListedInPossibleMoves(square)?styles.recommended:''} ${ square.active ? styles.active :''}`}
                 key={key}

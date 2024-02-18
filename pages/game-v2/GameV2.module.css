@@ -1,0 +1,52 @@
+.container{
+    height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid{
+    height: 80vh;
+    width: 80vh;
+    display: grid;
+    grid-template-columns: repeat(8,  1fr);
+    grid-template-rows: repeat(8,  1fr);
+}
+
+.white{
+    background-color: #E8EDF9;
+}
+
+.black{
+    background-color: #B7C0D8;
+}
+
+.square{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0.5px;
+}
+
+.square:hover{
+    background-color: #7b61ffc0;
+}
+
+.active {
+    background-color: #7B61FF !important;
+}
+
+.canAttack{
+ background-color: #7b61ffc0;
+}
+
+.recommended {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width:  40%;
+    height:  40%;
+    border-radius:  50%;
+    background-color: #7b61ff70;
+}
